@@ -10,11 +10,14 @@ if [ "$1x" == "x" ]; then
 fi
 echo "----> Creating new app: $1"
 
-classname=`ruby -e "puts '$1'.gsub(/_/,' ').gsub(/\b./){|match| match.upcase}.gsub(/\s/,'')"`
+classname=`ruby -r 'active_support/core_ext/string/inflections' -e "puts '$1'.underscore.classify"`
 
 git clone "$boilerplate" $1 --quiet
 
 cd $1
+
+# make dbpath for mongo
+mkdir .db
 
 # clean down the repo
 rm -rf .git
@@ -30,9 +33,6 @@ npm install --silent
 git init . --quiet
 git add .
 git commit -m "first commit" --quiet
-
-echo "----> creating db"
-rake db:create
 
 echo "port: 3000" > ".foreman"
 
