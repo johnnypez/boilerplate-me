@@ -1,6 +1,6 @@
 #Boilerplate Scripts
 
-Clone this repo then add the directory to your path.
+Clone this repo then add the bin directory to your path.
 
 ## Usage
 
