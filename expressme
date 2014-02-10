@@ -1,0 +1,42 @@
+#! /bin/sh
+
+set -e
+
+boilerplate="https://github.com/johnnypez/express-boilerplate.git"
+
+if [ "$1x" == "x" ]; then
+  echo "Usage: expressme appname"
+  exit 1
+fi
+echo "----> Creating new app: $1"
+
+classname=`ruby -e "puts '$1'.gsub(/_/,' ').gsub(/\b./){|match| match.upcase}.gsub(/\s/,'')"`
+
+git clone "$boilerplate" $1 --quiet
+
+cd $1
+
+echo "----> installing npm modules"
+npm install --silent
+
+# clean down the repo
+rm -rf .git
+
+# rename from boilerplate to new name
+find . -name "*.*" -exec sed -i "" "s/boilerplate/$1/g" "{}" \;
+find . -name "*.*" -exec sed -i "" "s/Boilerplate/$classname/g" "{}" \;
+
+# set up new git repo
+git init . --quiet
+git add .
+git commit -m "first commit" --quiet
+
+echo "----> creating db"
+rake db:create
+
+echo "port: 3000" > ".foreman"
+
+
+echo "----> Wow $classname!"
+echo "----> So node"
+echo "----> such develop"
