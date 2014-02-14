@@ -2,13 +2,25 @@
 
 set -e
 
+status() {
+  echo "-----> $*"
+}
+
+indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";; # mac/bsd sed: -l buffers on line boundaries
+    *)      sed -u "$c";; # unix/gnu sed: -u unbuffered (arbitrary) chunks of data
+  esac
+}
+
 boilerplate="https://github.com/johnnypez/heroku-rails4-boilerplate.git"
 
 if [ "$1x" == "x" ]; then
   echo "Usage: railsme appname"
   exit 1
 fi
-echo "----> Creating new app: $1"
+status "Creating new app: $1"
 
 classname=`ruby -r 'active_support/core_ext/string/inflections' -e "puts '$1'.underscore.classify"`
 
@@ -16,15 +28,20 @@ git clone "$boilerplate" $1 --quiet
 
 cd $1
 
-echo "----> bundling"
-bundle --quiet
+status "bundling"
+bundle | indent
+
+status "generating secret"
+secret=`bundle exec rake secret`
+echo "Boilerplate::Application.config.secret_key_base = '$secret'" > config/initializers/secret_token.rb
 
 # clean down the repo
 rm -rf .git
 
 # rename from boilerplate to new name
-find . -name "*.*" -exec sed -i "" "s/boilerplate/$1/g" "{}" \;
-find . -name "*.*" -exec sed -i "" "s/Boilerplate/$classname/g" "{}" \;
+
+find . -name "*.*" -exec sed -i "" "s/boilerplate/$1/g" "{}" \; 2> /dev/null
+find . -name "*.*" -exec sed -i "" "s/Boilerplate/$classname/g" "{}" \; 2> /dev/null
 sed -i "" "s/Boilerplate/$classname/g" Rakefile
 
 # set up new git repo
@@ -32,14 +49,12 @@ git init . --quiet
 git add .
 git commit -m "first commit" --quiet
 
-echo "----> creating db"
-rake db:create
+status "creating db"
+bundle exec rake db:create 2>&1 | indent
 
 echo "port: 3000" > ".foreman"
 echo "LOG_LEVEL=debug\nWEB_CONCURRENCY=2" > ".env"
 
-
-
-echo "----> Wow $classname!"
-echo "----> So rails"
-echo "----> such develop"
+status "Wow $classname!"
+status "So rails"
+status "such develop"
